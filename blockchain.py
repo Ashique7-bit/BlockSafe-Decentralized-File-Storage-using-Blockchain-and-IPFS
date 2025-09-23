@@ -8,7 +8,7 @@ class Block:
     def __init__(self, index, timestamp, data, previous_hash, nonce=0):
         self.index = index
         self.timestamp = timestamp
-        self.data = data  # File metadata: filename, ipfs_hash, size, timestamp
+        self.data = data
         self.previous_hash = previous_hash
         self.nonce = nonce
         self.hash = self.calculate_hash()
@@ -62,19 +62,79 @@ class Blockchain:
             current_block = self.chain[i]
             previous_block = self.chain[i-1]
             
-            # Check if current block hash is valid
             if current_block.hash != current_block.calculate_hash():
                 return False
             
-            # Check if previous hash matches
             if current_block.previous_hash != previous_block.hash:
                 return False
             
-            # Check if proof of work is valid
             if current_block.hash[:self.difficulty] != "0" * self.difficulty:
                 return False
         
         return True
+    
+    def validate_chain(self):
+        errors = []
+        details = {
+            'total_blocks': len(self.chain),
+            'valid_blocks': 0,
+            'invalid_blocks': 0,
+            'block_details': []
+        }
+        
+        # Check genesis block
+        genesis = self.chain[0]
+        if genesis.index != 0 or genesis.previous_hash != "0":
+            errors.append("Genesis block is invalid")
+            details['block_details'].append({
+                'block_index': 0,
+                'status': 'Invalid',
+                'issues': ['Genesis block structure is invalid']
+            })
+        else:
+            details['valid_blocks'] += 1
+            details['block_details'].append({
+                'block_index': 0,
+                'status': 'Valid',
+                'issues': []
+            })
+        
+        # Check subsequent blocks
+        for i in range(1, len(self.chain)):
+            current_block = self.chain[i]
+            previous_block = self.chain[i-1]
+            block_issues = []
+            
+            if current_block.index != previous_block.index + 1:
+                block_issues.append(f"Block index mismatch: Expected {previous_block.index + 1}, got {current_block.index}")
+            
+            if current_block.previous_hash != previous_block.hash:
+                block_issues.append("Previous hash doesn't match the actual previous block's hash")
+            
+            if current_block.hash != current_block.calculate_hash():
+                block_issues.append("Block's hash doesn't match its calculated hash")
+            
+            if current_block.hash[:self.difficulty] != "0" * self.difficulty:
+                block_issues.append(f"Proof-of-work invalid: Hash doesn't start with {self.difficulty} zeros")
+            
+            if block_issues:
+                errors.append(f"Block {current_block.index} has issues")
+                details['invalid_blocks'] += 1
+                details['block_details'].append({
+                    'block_index': current_block.index,
+                    'status': 'Invalid',
+                    'issues': block_issues
+                })
+            else:
+                details['valid_blocks'] += 1
+                details['block_details'].append({
+                    'block_index': current_block.index,
+                    'status': 'Valid',
+                    'issues': []
+                })
+        
+        is_valid = len(errors) == 0
+        return is_valid, errors, details
     
     def get_file_by_hash(self, ipfs_hash):
         for block in self.chain:
@@ -85,7 +145,7 @@ class Blockchain:
     def get_all_files(self):
         files = []
         for block in self.chain:
-            if 'filename' in block.data:  # Skip genesis block
+            if 'filename' in block.data:
                 files.append(block.data)
         return files
     
