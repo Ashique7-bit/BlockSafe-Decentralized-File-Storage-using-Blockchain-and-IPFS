@@ -32,6 +32,20 @@ class Block:
             "nonce": self.nonce,
             "hash": self.hash
         }
+    
+    def create_snapshot(self):
+        """Create a snapshot of current block state for demo restoration"""
+        return {
+            'data': self.data.copy() if isinstance(self.data, dict) else self.data,
+            'hash': self.hash,
+            'previous_hash': self.previous_hash
+        }
+    
+    def restore_from_snapshot(self, snapshot):
+        """Restore block state from snapshot"""
+        self.data = snapshot['data']
+        self.hash = snapshot['hash']
+        self.previous_hash = snapshot['previous_hash']
 
 class Blockchain:
     def __init__(self):
@@ -151,3 +165,52 @@ class Blockchain:
     
     def to_dict(self):
         return [block.to_dict() for block in self.chain]
+    
+    def remove_file_by_hash(self, ipfs_hash):
+        """
+        Remove a file block from the blockchain (hard delete)
+        This maintains chain integrity by recalculating hashes
+        """
+        # Find the block to remove
+        block_to_remove = None
+        block_index = -1
+        
+        for i, block in enumerate(self.chain):
+            if i > 0 and 'ipfs_hash' in block.data and block.data['ipfs_hash'] == ipfs_hash:
+                block_to_remove = block
+                block_index = i
+                break
+        
+        if block_to_remove is None:
+            return False
+        
+        # Remove the block from the chain
+        self.chain.pop(block_index)
+        
+        # Rebuild the chain from the removed block onward to maintain integrity
+        self._rebuild_chain_from(block_index)
+        
+        return True
+    
+    def _rebuild_chain_from(self, start_index):
+        """
+        Rebuild the blockchain from a specific index to maintain hash integrity
+        """
+        if start_index >= len(self.chain) or start_index <= 0:
+            return
+        
+        # Update indices and recalculate hashes for all subsequent blocks
+        for i in range(start_index, len(self.chain)):
+            current_block = self.chain[i]
+            previous_block = self.chain[i-1]
+            
+            # Update index
+            current_block.index = i
+            
+            # Update previous hash
+            current_block.previous_hash = previous_block.hash
+            
+            # Reset nonce and recalculate hash with proper mining
+            current_block.nonce = 0
+            current_block.hash = current_block.calculate_hash()
+            self.mine_block(current_block)

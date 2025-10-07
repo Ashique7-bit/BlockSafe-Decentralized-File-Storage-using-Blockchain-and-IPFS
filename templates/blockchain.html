@@ -3,29 +3,261 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blockchain - BlockSafe</title>
+    <title>Blockchain Explorer - BlockSafe</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="container mt-5">
-        <h2>BlockSafe Blockchain</h2>
-        <div class="accordion" id="blockchainAccordion">
-            {% for block in chain %}
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="heading{{ block.index }}">
-                    <button class="accordion-button {% if block.index != 0 %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ block.index }}" aria-expanded="{% if block.index == 0 %}true{% else %}false{% endif %}" aria-controls="collapse{{ block.index }}">
-                        Block #{{ block.index }} - {{ block.timestamp }}
-                    </button>
-                </h2>
-                <div id="collapse{{ block.index }}" class="accordion-collapse collapse {% if block.index == 0 %}show{% endif %}" aria-labelledby="heading{{ block.index }}" data-bs-parent="#blockchainAccordion">
-                    <div class="accordion-body">
-                        <pre>{{ block | tojson(indent=2) }}</pre>
-                    </div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark tech-navbar">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <i class="fas fa-cube me-2"></i>
+                <span class="fw-bold">BlockSafe</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/files">Files</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/blockchain">Blockchain</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/verify">Verify</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container my-5">
+        <!-- Header Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="section-title mb-3">Blockchain Explorer</h1>
+                <p class="text-center text-light opacity-75">
+                    View the immutable ledger storing all file metadata with cryptographic verification
+                </p>
+            </div>
+        </div>
+
+        <!-- Blockchain Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card tech-card text-center p-3">
+                    <i class="fas fa-cubes feature-icon mb-2"></i>
+                    <h4 class="mb-1">{{ chain|length }}</h4>
+                    <p class="mb-0 small">Total Blocks</p>
                 </div>
             </div>
-            {% endfor %}
+            <div class="col-md-3 mb-3">
+                <div class="card tech-card text-center p-3">
+                    <i class="fas fa-file feature-icon mb-2"></i>
+                    <h4 class="mb-1">{{ chain|length - 1 }}</h4>
+                    <p class="mb-0 small">File Records</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card tech-card text-center p-3">
+                    <i class="fas fa-link feature-icon mb-2"></i>
+                    <h4 class="mb-1">{{ chain|length }}</h4>
+                    <p class="mb-0 small">Chain Length</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card tech-card text-center p-3">
+                    <i class="fas fa-check-circle feature-icon mb-2"></i>
+                    <h4 class="mb-1">Valid</h4>
+                    <p class="mb-0 small">Chain Status</p>
+                </div>
+            </div>
         </div>
-        <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">Back to Home</a>
+
+        <!-- Blockchain Blocks -->
+        <div class="card tech-card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-link me-2"></i>
+                    Block Chain ({{ chain|length }} blocks)
+                </h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="accordion" id="blockchainAccordion">
+                    {% for block in chain %}
+                    <div class="blockchain-accordion-item">
+                        <div class="accordion-item border-0">
+                            <h2 class="accordion-header" id="heading{{ block.index }}">
+                                <button class="accordion-button tech-accordion-button {% if block.index != 0 %}collapsed{% endif %}" 
+                                        type="button" 
+                                        data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse{{ block.index }}" 
+                                        aria-expanded="{% if block.index == 0 %}true{% else %}false{% endif %}" 
+                                        aria-controls="collapse{{ block.index }}">
+                                    <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-primary me-3">#{{ block.index }}</span>
+                                            <div>
+                                                <strong class="d-block">
+                                                    {% if block.index == 0 %}
+                                                        Genesis Block
+                                                    {% else %}
+                                                        File: {{ block.data.filename if block.data and block.data.filename else 'Data Block' }}
+                                                    {% endif %}
+                                                </strong>
+                                                <small class="text-muted">{{ block.timestamp }}</small>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-success me-2">
+                                                <i class="fas fa-check me-1"></i>Valid
+                                            </span>
+                                            <i class="fas fa-chevron-down accordion-arrow"></i>
+                                        </div>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapse{{ block.index }}" 
+                                 class="accordion-collapse collapse {% if block.index == 0 %}show{% endif %}" 
+                                 aria-labelledby="heading{{ block.index }}" 
+                                 data-bs-parent="#blockchainAccordion">
+                                <div class="accordion-body tech-accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="border-bottom pb-2 mb-3">Block Information</h6>
+                                            <table class="table table-borderless table-sm">
+                                                <tr>
+                                                    <td><strong>Index:</strong></td>
+                                                    <td>{{ block.index }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Timestamp:</strong></td>
+                                                    <td>{{ block.timestamp }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Nonce:</strong></td>
+                                                    <td>{{ block.nonce }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Previous Hash:</strong></td>
+                                                    <td class="text-truncate" style="max-width: 200px;">
+                                                        <code>{{ block.previous_hash }}</code>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Current Hash:</strong></td>
+                                                    <td class="text-truncate" style="max-width: 200px;">
+                                                        <code>{{ block.hash }}</code>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="border-bottom pb-2 mb-3">Block Data</h6>
+                                            {% if block.index == 0 %}
+                                                <div class="alert alert-info mb-0">
+                                                    <i class="fas fa-info-circle me-2"></i>
+                                                    This is the genesis block - the first block in the blockchain.
+                                                </div>
+                                            {% else %}
+                                                {% if block.data %}
+                                                    <table class="table table-borderless table-sm">
+                                                        {% for key, value in block.data.items() %}
+                                                        <tr>
+                                                            <td><strong>{{ key|title }}:</strong></td>
+                                                            <td>
+                                                                {% if key == 'ipfs_hash' %}
+                                                                    <code class="text-primary">{{ value }}</code>
+                                                                {% else %}
+                                                                    {{ value }}
+                                                                {% endif %}
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </table>
+                                                {% else %}
+                                                    <p class="text-muted">No data in this block.</p>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Raw JSON Data -->
+                                    <div class="mt-4">
+                                        <h6 class="border-bottom pb-2 mb-3">Raw JSON Data</h6>
+                                        <pre class="bg-dark text-light p-3 rounded" style="font-size: 0.8rem; max-height: 300px; overflow-y: auto;"><code>{{ block | tojson(indent=2) }}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <a href="{{ url_for('index') }}" class="btn btn-primary me-2">
+                    <i class="fas fa-home me-2"></i>Back to Home
+                </a>
+                <a href="/verify" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-check-circle me-2"></i>Verify Blockchain
+                </a>
+                <a href="/api/blockchain" class="btn btn-api">
+                    <i class="fas fa-code me-2"></i>API Access
+                </a>
+            </div>
+        </div>
     </div>
-    
-    <script src="
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2025 BlockSafe - Decentralized File Storage</p>
+            <p class="mb-0">Built with Flask, IPFS, and Blockchain Technology</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add animation to accordion items
+        document.addEventListener('DOMContentLoaded', function() {
+            const accordionItems = document.querySelectorAll('.blockchain-accordion-item');
+            
+            accordionItems.forEach((item, index) => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(20px)';
+                item.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                
+                setTimeout(() => {
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateY(0)';
+                }, 100 * index);
+            });
+
+            // Add smooth animation to accordion arrows
+            const accordionButtons = document.querySelectorAll('.accordion-button');
+            accordionButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const arrow = this.querySelector('.accordion-arrow');
+                    if (this.classList.contains('collapsed')) {
+                        arrow.style.transform = 'rotate(0deg)';
+                    } else {
+                        arrow.style.transform = 'rotate(180deg)';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -85,69 +85,66 @@ def allowed_file(filename):
 def index():
     return render_template('index.html')
 
-@app.route('/upload', methods=['GET', 'POST'])
+@app.route('/upload', methods=['POST'])
 def upload_file():
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('No file selected')
-            return redirect(request.url)
-        
-        file = request.files['file']
-        if file.filename == '':
-            flash('No file selected')
-            return redirect(request.url)
-        
-        if file and allowed_file(file.filename):
-            try:
-                # Save file temporarily
-                filename = secure_filename(file.filename)
-                file_path = os.path.join(Config.UPLOAD_FOLDER, filename)
-                file.save(file_path)
-                
-                # Upload to IPFS
-                ipfs_result = ipfs_client.add(file_path)
-                if not ipfs_result:
-                    flash('Failed to upload to IPFS. Make sure IPFS daemon is running.')
-                    return redirect(request.url)
-                
-                ipfs_hash = ipfs_result['Hash']
-                
-                # Prepare metadata for blockchain
-                file_metadata = {
-                    "filename": filename,
-                    "file_extension": filename.rsplit('.', 1)[1].lower() if '.' in filename else '',
-                    "file_size": os.path.getsize(file_path),
-                    "ipfs_hash": ipfs_hash,
-                    "timestamp": str(datetime.now()),
-                    "uploader": request.form.get('uploader', 'anonymous')
-                }
-                
-                # Add to blockchain
-                new_block = Block(
-                    index=len(blockchain.chain),
-                    timestamp=datetime.now(),
-                    data=file_metadata,
-                    previous_hash=blockchain.get_latest_block().hash
-                )
-                
-                blockchain.add_block(new_block)
-                
-                # Clean up temporary file
-                os.remove(file_path)
-                
-                return render_template('success.html', 
-                                     ipfs_hash=ipfs_hash,
-                                     filename=filename,
-                                     block_index=new_block.index)
-                
-            except Exception as e:
-                flash(f'Error uploading file: {str(e)}')
-                return redirect(request.url)
-        
-        flash('Invalid file type')
-        return redirect(request.url)
+    if 'file' not in request.files:
+        flash('No file selected')
+        return redirect(url_for('index'))
     
-    return render_template('upload.html')
+    file = request.files['file']
+    if file.filename == '':
+        flash('No file selected')
+        return redirect(url_for('index'))
+    
+    if file and allowed_file(file.filename):
+        try:
+            # Save file temporarily
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(Config.UPLOAD_FOLDER, filename)
+            file.save(file_path)
+            
+            # Upload to IPFS
+            ipfs_result = ipfs_client.add(file_path)
+            if not ipfs_result:
+                flash('Failed to upload to IPFS. Make sure IPFS daemon is running.')
+                return redirect(url_for('index'))
+            
+            ipfs_hash = ipfs_result['Hash']
+            
+            # Prepare metadata for blockchain
+            file_metadata = {
+                "filename": filename,
+                "file_extension": filename.rsplit('.', 1)[1].lower() if '.' in filename else '',
+                "file_size": os.path.getsize(file_path),
+                "ipfs_hash": ipfs_hash,
+                "timestamp": str(datetime.now()),
+                "uploader": request.form.get('uploader', 'anonymous')
+            }
+            
+            # Add to blockchain
+            new_block = Block(
+                index=len(blockchain.chain),
+                timestamp=datetime.now(),
+                data=file_metadata,
+                previous_hash=blockchain.get_latest_block().hash
+            )
+            
+            blockchain.add_block(new_block)
+            
+            # Clean up temporary file
+            os.remove(file_path)
+            
+            return render_template('success.html', 
+                                 ipfs_hash=ipfs_hash,
+                                 filename=filename,
+                                 block_index=new_block.index)
+            
+        except Exception as e:
+            flash(f'Error uploading file: {str(e)}')
+            return redirect(url_for('index'))
+    
+    flash('Invalid file type')
+    return redirect(url_for('index'))
 
 @app.route('/download', methods=['GET', 'POST'])
 def download_file():
@@ -226,13 +223,19 @@ def api_blockchain():
     chain_data = blockchain.to_dict()
     return jsonify(chain_data)
 
-# DEMONSTRATION ROUTES - Add these to your existing app.py
-
+# DEMONSTRATION ROUTES - UPDATED FOR HARD DELETE
 @app.route('/demo/tamper-block')
 def demo_tamper_block():
     """
     Create a realistic tampering scenario for demonstration
     """
+    # Store original state before first tampering
+    if not hasattr(blockchain, 'original_chain_state'):
+        blockchain.original_chain_state = {
+            'chain': [block.to_dict() for block in blockchain.chain],
+            'files_count': len(blockchain.get_all_files())
+        }
+    
     # Ensure we have enough blocks to demonstrate
     if len(blockchain.chain) <= 1:
         # Add some demo files if blockchain is empty
@@ -242,14 +245,16 @@ def demo_tamper_block():
                 "ipfs_hash": "QmResearchPaper123", 
                 "timestamp": str(datetime.now()),
                 "file_size": 2048000,
-                "uploader": "professor_smith"
+                "uploader": "professor_smith",
+                "file_extension": "pdf"
             },
             {
                 "filename": "project_data.xlsx", 
                 "ipfs_hash": "QmProjectData456", 
                 "timestamp": str(datetime.now()),
                 "file_size": 1024000,
-                "uploader": "student_john"
+                "uploader": "student_john",
+                "file_extension": "xlsx"
             }
         ]
         
@@ -262,25 +267,31 @@ def demo_tamper_block():
             )
             blockchain.add_block(block)
     
-    # Now simulate tampering on the most recent block
-    if len(blockchain.chain) > 1:
-        target_block = blockchain.chain[-1]  # Get the last block
+    # Now simulate tampering on the most recent file block
+    file_blocks = [block for block in blockchain.chain if 'filename' in block.data]
+    if file_blocks:
+        target_block = file_blocks[-1]
         
         # Store original values for demonstration
         original_filename = target_block.data['filename']
-        original_size = target_block.data['file_size']
         
-        # Simulate tampering by creating a modified copy (not affecting real data)
-        # For demonstration, we'll actually modify the block but in a controlled way
-        target_block.data = target_block.data.copy()  # Work with a copy
-        target_block.data['filename'] = "malicious_software.exe"
-        target_block.data['file_size'] = 999999999
-        target_block.data['uploader'] = "unknown_hacker"
+        # Store original data if not already stored
+        if not hasattr(target_block, 'original_demo_data'):
+            target_block.original_demo_data = target_block.data.copy()
         
-        # Break the hash to simulate tampering detection
-        # In a real attack, the hash would become invalid when data changes
-        # We'll simulate this by modifying the hash field directly for demo purposes
-        original_hash = target_block.hash
+        # Make temporary modifications for demo
+        modified_data = target_block.original_demo_data.copy()
+        modified_data['filename'] = "malicious_software.exe"
+        modified_data['file_size'] = 999999999
+        modified_data['uploader'] = "unknown_hacker"
+        
+        # Apply temporary modifications
+        target_block.data = modified_data
+        
+        # Also temporarily break the hash for demonstration
+        if not hasattr(target_block, 'original_demo_hash'):
+            target_block.original_demo_hash = target_block.hash
+        
         target_block.hash = "0000TAMPERED_HASH_DEMO"
         
         flash(f'Demo: Block #{target_block.index} tampered! Changed "{original_filename}" to "malicious_software.exe"')
@@ -293,11 +304,19 @@ def demo_corrupt_chain():
     Simulate a broken blockchain chain for demonstration
     """
     if len(blockchain.chain) > 2:
-        # Break the chain by modifying a middle block's previous_hash
-        tamper_block = blockchain.chain[2]
-        tamper_block.previous_hash = "BROKEN_CHAIN_LINK_123"
-        
-        flash('Demo: Blockchain chain broken! Previous hash reference corrupted.')
+        # Find a file block to corrupt (not genesis block)
+        file_blocks = [block for block in blockchain.chain if block.index > 0 and 'filename' in block.data]
+        if file_blocks and len(file_blocks) > 1:
+            tamper_block = file_blocks[1]  # Use second file block
+            
+            # Store original previous_hash if not already stored
+            if not hasattr(tamper_block, 'original_demo_previous_hash'):
+                tamper_block.original_demo_previous_hash = tamper_block.previous_hash
+            
+            # Apply temporary corruption
+            tamper_block.previous_hash = "BROKEN_CHAIN_LINK_123"
+            
+            flash('Demo: Blockchain chain broken! Previous hash reference corrupted.')
     
     return redirect(url_for('verify_chain'))
 
@@ -306,10 +325,16 @@ def demo_invalid_pow():
     """
     Simulate invalid proof-of-work for demonstration
     """
-    if len(blockchain.chain) > 1:
-        # Create a block with invalid proof-of-work
-        tamper_block = blockchain.chain[-1]
-        tamper_block.hash = "000INVALID_POW_HASH"  # Doesn't start with enough zeros
+    file_blocks = [block for block in blockchain.chain if 'filename' in block.data]
+    if file_blocks:
+        tamper_block = file_blocks[-1]
+        
+        # Store original hash if not already stored
+        if not hasattr(tamper_block, 'original_demo_hash'):
+            tamper_block.original_demo_hash = tamper_block.hash
+        
+        # Apply temporary invalid hash
+        tamper_block.hash = "000INVALID_POW_HASH"
         
         flash('Demo: Invalid proof-of-work detected! Hash does not meet difficulty requirement.')
     
@@ -318,42 +343,95 @@ def demo_invalid_pow():
 @app.route('/demo/reset-demo')
 def demo_reset():
     """
-    Reset the blockchain to a valid state after demonstration
+    Reset the blockchain to original state after demonstration
     """
-    global blockchain
+    try:
+        # Restore original data for all blocks that were tampered with
+        for block in blockchain.chain:
+            # Restore original data if it was stored
+            if hasattr(block, 'original_demo_data'):
+                block.data = block.original_demo_data
+                # Remove the temporary attribute
+                delattr(block, 'original_demo_data')
+            
+            # Restore original hash if it was stored
+            if hasattr(block, 'original_demo_hash'):
+                block.hash = block.original_demo_hash
+                delattr(block, 'original_demo_hash')
+            
+            # Restore original previous_hash if it was stored
+            if hasattr(block, 'original_demo_previous_hash'):
+                block.previous_hash = block.original_demo_previous_hash
+                delattr(block, 'original_demo_previous_hash')
+        
+        # If we have a stored original chain, restore it (but preserve user files)
+        if hasattr(blockchain, 'original_chain_state'):
+            # Get current user files (files uploaded by user, not demo files)
+            current_files = blockchain.get_all_files()
+            user_files = [file for file in current_files if file.get('uploader') not in ['professor_smith', 'student_john', 'demo_user']]
+            
+            # Rebuild chain from stored original data
+            new_chain = []
+            for block_data in blockchain.original_chain_state['chain']:
+                block = Block(
+                    index=block_data['index'],
+                    timestamp=datetime.fromisoformat(block_data['timestamp'].replace('Z', '+00:00')),
+                    data=block_data['data'],
+                    previous_hash=block_data['previous_hash'],
+                    nonce=block_data['nonce']
+                )
+                block.hash = block_data['hash']
+                new_chain.append(block)
+            
+            blockchain.chain = new_chain
+            
+            # Re-add user files that were uploaded after demo started
+            for file_data in user_files:
+                if file_data not in [block.data for block in blockchain.chain if 'filename' in block.data]:
+                    block = Block(
+                        index=len(blockchain.chain),
+                        timestamp=datetime.now(),
+                        data=file_data,
+                        previous_hash=blockchain.get_latest_block().hash
+                    )
+                    blockchain.add_block(block)
+            
+            delattr(blockchain, 'original_chain_state')
+        
+        flash('Blockchain reset to valid state - All user files preserved!')
+        
+    except Exception as e:
+        flash(f'Reset completed with note: {str(e)}')
     
-    # Reinitialize with a clean blockchain
-    blockchain = Blockchain()
-    
-    # Add some demo files for presentation
-    demo_files = [
-        {
-            "filename": "important_document.pdf", 
-            "ipfs_hash": "QmValidHash1", 
-            "timestamp": str(datetime.now()),
-            "file_size": 1048576,
-            "uploader": "demo_user"
-        },
-        {
-            "filename": "project_report.docx", 
-            "ipfs_hash": "QmValidHash2", 
-            "timestamp": str(datetime.now()),
-            "file_size": 2097152,
-            "uploader": "demo_user"
-        }
-    ]
-    
-    for file_data in demo_files:
-        block = Block(
-            index=len(blockchain.chain),
-            timestamp=datetime.now(),
-            data=file_data,
-            previous_hash=blockchain.get_latest_block().hash
-        )
-        blockchain.add_block(block)
-    
-    flash('Blockchain reset to valid state for demonstration')
     return redirect(url_for('verify_chain'))
+
+# File Delete Route - HARD DELETE
+@app.route('/delete-file', methods=['POST'])
+def delete_file():
+    """
+    Remove a file from blockchain (hard delete)
+    This removes the block and rebuilds the chain to maintain integrity
+    """
+    ipfs_hash = request.form.get('ipfs_hash')
+    filename = request.form.get('filename')
+    
+    if not ipfs_hash:
+        flash('No IPFS hash provided')
+        return redirect(url_for('list_files'))
+    
+    try:
+        # Remove the file from blockchain using hard delete
+        success = blockchain.remove_file_by_hash(ipfs_hash)
+        
+        if success:
+            flash(f'File "{filename}" has been completely removed from the blockchain')
+        else:
+            flash(f'File "{filename}" not found in blockchain')
+            
+    except Exception as e:
+        flash(f'Error deleting file: {str(e)}')
+    
+    return redirect(url_for('list_files'))
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)

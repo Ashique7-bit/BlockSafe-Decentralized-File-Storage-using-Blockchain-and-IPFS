@@ -6,225 +6,14 @@
     <title>BlockSafe - Decentralized File Storage</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        :root {
-            --primary: #4361ee;
-            --secondary: #3a0ca3;
-            --accent: #4cc9f0;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --success: #4bb543;
-            --warning: #ffdd00;
-            --danger: #dc3545;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            background-attachment: fixed;
-        }
-        
-        .navbar {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-        }
-        
-        .card {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-            color: white;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-        
-        .btn-primary {
-            background: var(--primary);
-            border: none;
-            border-radius: 50px;
-            padding: 12px 24px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary:hover {
-            background: var(--secondary);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .btn-success {
-            background: var(--success);
-            border: none;
-            border-radius: 50px;
-            padding: 12px 24px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-success:hover {
-            background: #3d9e36;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .btn-api {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            border-radius: 50px;
-            padding: 8px 16px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-api:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
-        
-        .form-control {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            border-radius: 50px;
-            padding: 12px 20px;
-        }
-        
-        .form-control:focus {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.4);
-            box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
-            color: white;
-        }
-        
-        .form-control::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            color: var(--accent);
-        }
-        
-        .hero-section {
-            padding: 100px 0;
-            text-align: center;
-        }
-        
-        .hero-title {
-            font-size: 3.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-        
-        .hero-subtitle {
-            font-size: 1.5rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
-        
-        .section-title {
-            font-size: 2rem;
-            font-weight: 600;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-        
-        .file-upload-area {
-            border: 2px dashed rgba(255, 255, 255, 0.3);
-            border-radius: 20px;
-            padding: 2rem;
-            text-align: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .file-upload-area:hover {
-            border-color: rgba(255, 255, 255, 0.5);
-            background: rgba(255, 255, 255, 0.05);
-        }
-        
-        .file-upload-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            color: var(--accent);
-        }
-        
-        .feature-card {
-            text-align: center;
-            padding: 2rem 1rem;
-            height: 100%;
-        }
-        
-        .footer {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 2rem 0;
-            margin-top: 4rem;
-            text-align: center;
-        }
-        
-        .floating-alert {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            animation: slideIn 0.5s ease;
-        }
-        
-        .api-section {
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin-top: 2rem;
-        }
-        
-        .api-title {
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
-            text-align: center;
-            opacity: 0.8;
-        }
-        
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .hero-title {
-                font-size: 2.5rem;
-            }
-            
-            .hero-subtitle {
-                font-size: 1.2rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark tech-navbar">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="#">
-                <i class="fas fa-shield-alt me-2"></i>
+                <i class="fas fa-cube me-2"></i>
                 <span class="fw-bold">BlockSafe</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -252,11 +41,29 @@
     <!-- Hero Section -->
     <section class="hero-section">
         <div class="container">
-            <h1 class="hero-title">Secure Decentralized File Storage</h1>
-            <p class="hero-subtitle">Using IPFS & Blockchain Technology</p>
-            <a href="#upload-section" class="btn btn-primary btn-lg">
-                <i class="fas fa-cloud-upload-alt me-2"></i>Get Started
-            </a>
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="hero-title">Secure Decentralized File Storage</h1>
+                    <p class="hero-subtitle">Powered by Blockchain & IPFS Technology</p>
+                    <p class="hero-description">
+                        Store your files securely across a distributed network with immutable blockchain verification. 
+                        Experience the future of decentralized storage.
+                    </p>
+                    <a href="#upload-section" class="btn btn-primary btn-lg hero-btn">
+                        <i class="fas fa-cloud-upload-alt me-2"></i>Get Started
+                    </a>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <div class="tech-animation">
+                        <i class="fas fa-cubes main-icon"></i>
+                        <div class="floating-elements">
+                            <i class="fas fa-link element-1"></i>
+                            <i class="fas fa-database element-2"></i>
+                            <i class="fas fa-shield-alt element-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -276,18 +83,18 @@
 
         <!-- Upload Section -->
         <section id="upload-section" class="mb-5">
-            <h2 class="section-title">Upload Your Files Securely</h2>
-            <div class="card p-4">
+            <h2 class="section-title">Upload Files to Decentralized Storage</h2>
+            <div class="card tech-card p-4">
                 <div class="file-upload-area" onclick="document.getElementById('fileInput').click()">
                     <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
                     <h4>Drag & Drop or Click to Upload</h4>
-                    <p class="mb-0">Your files are encrypted and stored on the decentralized IPFS network</p>
+                    <p class="mb-0">Files are stored on IPFS network with blockchain metadata verification</p>
                 </div>
                 <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" class="mt-4">
                     <input type="file" name="file" id="fileInput" class="d-none" required onchange="showFileName(this)">
                     <div class="mb-3">
                         <label for="uploaderName" class="form-label">Your Name (optional)</label>
-                        <input type="text" class="form-control" id="uploaderName" name="uploader" placeholder="Enter your name">
+                        <input type="text" class="form-control tech-input" id="uploaderName" name="uploader" placeholder="Enter your name">
                     </div>
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary">
@@ -301,20 +108,21 @@
 
         <!-- Download Section -->
         <section class="mb-5">
-            <h2 class="section-title">Retrieve Your Files</h2>
-            <div class="card p-4">
+            <h2 class="section-title">Retrieve Files from IPFS</h2>
+            <div class="card tech-card p-4">
                 <form action="{{ url_for('download_file') }}" method="post">
                     <div class="mb-3">
-                        <label for="ipfsHash" class="form-label">IPFS Hash</label>
+                        <label for="ipfsHash" class="form-label">IPFS Content Hash</label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
-                            <input type="text" class="form-control" id="ipfsHash" name="ipfs_hash" 
-                                   placeholder="Enter IPFS content hash" required>
+                            <span class="input-group-text tech-input-group"><i class="fas fa-hashtag"></i></span>
+                            <input type="text" class="form-control tech-input" id="ipfsHash" name="ipfs_hash" 
+                                   placeholder="Enter IPFS content hash (Qm...)" required>
                         </div>
+                        <div class="form-text">Enter the unique IPFS hash to retrieve your file</div>
                     </div>
                     <div class="d-grid">
                         <button type="submit" class="btn btn-success">
-                            <i class="fas fa-cloud-download-alt me-2"></i>Download from IPFS
+                            <i class="fas fa-cloud-download-alt me-2"></i>Download from IPFS Network
                         </button>
                     </div>
                 </form>
@@ -326,24 +134,24 @@
             <h2 class="section-title">Why Choose BlockSafe?</h2>
             <div class="row">
                 <div class="col-md-4 mb-4">
-                    <div class="card feature-card">
-                        <i class="fas fa-shield-alt feature-icon"></i>
-                        <h4>Tamper-Proof Security</h4>
-                        <p>Your file metadata is stored on an immutable blockchain, preventing unauthorized changes.</p>
+                    <div class="card tech-card feature-card">
+                        <i class="fas fa-link feature-icon"></i>
+                        <h4>Blockchain Verified</h4>
+                        <p>File metadata permanently recorded on blockchain for tamper-proof verification and audit trail.</p>
                     </div>
                 </div>
                 <div class="col-md-4 mb-4">
-                    <div class="card feature-card">
-                        <i class="fas fa-server feature-icon"></i>
-                        <h4>Decentralized Storage</h4>
-                        <p>Files are stored on the IPFS network, eliminating single points of failure.</p>
+                    <div class="card tech-card feature-card">
+                        <i class="fas fa-network-wired feature-icon"></i>
+                        <h4>IPFS Distributed Storage</h4>
+                        <p>Files stored across decentralized IPFS network, eliminating single points of failure.</p>
                     </div>
                 </div>
                 <div class="col-md-4 mb-4">
-                    <div class="card feature-card">
+                    <div class="card tech-card feature-card">
                         <i class="fas fa-bolt feature-icon"></i>
-                        <h4>Easy Retrieval</h4>
-                        <p>Download your files with original names using just the IPFS hash.</p>
+                        <h4>Instant Retrieval</h4>
+                        <p>Download files with original names using IPFS content addressing system.</p>
                     </div>
                 </div>
             </div>
@@ -353,14 +161,14 @@
         <section class="mb-5">
             <h2 class="section-title">Quick Actions</h2>
             <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                <a href="/files" class="btn btn-outline-light me-md-2">
+                <a href="/files" class="btn btn-outline-primary me-md-2">
                     <i class="fas fa-file me-2"></i>View All Files
                 </a>
-                <a href="/blockchain" class="btn btn-outline-light me-md-2">
+                <a href="/blockchain" class="btn btn-outline-primary me-md-2">
                     <i class="fas fa-link me-2"></i>View Blockchain
                 </a>
-                <a href="/verify" class="btn btn-outline-light">
-                    <i class="fas fa-check-circle me-2"></i>Verify Blockchain
+                <a href="/verify" class="btn btn-outline-primary">
+                    <i class="fas fa-check-circle me-2"></i>Verify Integrity
                 </a>
             </div>
         </section>
@@ -371,10 +179,10 @@
                 <h3 class="api-title">Developer API Access</h3>
                 <div class="d-flex justify-content-center gap-3 flex-wrap">
                     <a href="/api/files" class="btn btn-api">
-                        <i class="fas fa-code me-2"></i>API: Files
+                        <i class="fas fa-code me-2"></i>Files API
                     </a>
                     <a href="/api/blockchain" class="btn btn-api">
-                        <i class="fas fa-code me-2"></i>API: Blockchain
+                        <i class="fas fa-code me-2"></i>Blockchain API
                     </a>
                 </div>
                 <p class="text-center mt-3 mb-0 small opacity-75">
