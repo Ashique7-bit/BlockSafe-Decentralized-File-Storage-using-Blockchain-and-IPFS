@@ -89,14 +89,21 @@
                                 <td>{{ file.file_size }} bytes</td>
                                 <td>{{ file.timestamp }}</td>
                                 <td>
-                                    <form action="{{ url_for('delete_file') }}" method="post" class="d-inline">
-                                        <input type="hidden" name="ipfs_hash" value="{{ file.ipfs_hash }}">
-                                        <input type="hidden" name="filename" value="{{ file.filename }}">
-                                        <button type="submit" class="btn btn-danger btn-sm" 
-                                                onclick="return confirm('Are you sure you want to delete {{ file.filename }}? This will remove it from blockchain records.')">
-                                            <i class="fas fa-trash me-1"></i>Delete
-                                        </button>
-                                    </form>
+                                    <div class="btn-group">
+                                        <a href="{{ url_for('file_distribution', ipfs_hash=file.ipfs_hash) }}" 
+                                           class="btn btn-info btn-sm me-1"
+                                           title="View IPFS Distribution">
+                                            <i class="fas fa-network-wired me-1"></i>View Distribution
+                                        </a>
+                                        <form action="{{ url_for('delete_file') }}" method="post" class="d-inline">
+                                            <input type="hidden" name="ipfs_hash" value="{{ file.ipfs_hash }}">
+                                            <input type="hidden" name="filename" value="{{ file.filename }}">
+                                            <button type="submit" class="btn btn-danger btn-sm" 
+                                                    onclick="return confirm('Are you sure you want to delete {{ file.filename }}? This will remove it from blockchain records.')">
+                                                <i class="fas fa-trash me-1"></i>Delete
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
